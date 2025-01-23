@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Slope Graph with Inequalities</title>
+  <title>Slope Graph</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
@@ -15,12 +15,11 @@
 </head>
 <body>
   <div class="container">
-    <h1>Slope Graph with Inequalities</h1>
-    <p>Enter equations or inequalities in the form <code>y &lt; mx + b</code> or <code>y &ge; mx + b</code>:</p>
-    <p>Inequalities are supported, just type in <=, =>, <, or > in place of the = sign.</p>
+    <h1>Slope Graph</h1>
+    <p>Enter slope equations in the form <code>y = mx + b</code>:</p>
     <div>
       <input type="text" id="equation1" placeholder="e.g., y = 2x + 3">
-      <input type="text" id="equation2" placeholder="e.g., y = -x + 1">
+      <input type="text" id="equation2" placeholder="e.g., y = 2x - 4">
       <button onclick="plotGraph()">Plot Graph</button>
     </div>
     <div id="graph-container">
@@ -34,28 +33,21 @@
     let chart;
 
     function parseEquation(equation) {
-      // Extract inequality, slope (m), and intercept (b)
-      const match = equation.match(/y\s*(<|>|<=|>=)\s*([+-]?\d*\.?\d*)x\s*([+-]?\s*\d*\.?\d*)?/i);
+      // Extract m and b from the equation "y = mx + b"
+      const match = equation.match(/y\s*=\s*([+-]?\d*\.?\d*)x\s*([+-]?\s*\d*\.?\d*)?/i);
       if (!match) return null;
 
-      const inequality = match[1]; // Inequality symbol
-      const m = parseFloat(match[2]) || 0; // Slope (m)
-      const b = parseFloat(match[3]?.replace(/\s+/g, '') || 0); // Intercept (b)
-      return { inequality, m, b };
+      const m = parseFloat(match[1]) || 0; // Slope (m)
+      const b = parseFloat(match[2]?.replace(/\s+/g, '') || 0); // Intercept (b)
+      return { m, b };
     }
 
-    function generateShadedRegionData(m, b, inequality, xRange = [-10, 10]) {
+    function generateLineData(m, b, xRange = [-10, 10]) {
       const data = [];
-      const yBoundary = x => m * x + b;
-
-      for (let x = xRange[0]; x <= xRange[1]; x += 0.1) {
-        const y = yBoundary(x);
-        data.push({ x, y });
+      for (let x = xRange[0]; x <= xRange[1]; x++) {
+        data.push({ x, y: m * x + b });
       }
-
-      // Determine which side of the line to shade
-      const shadeAbove = inequality === '>' || inequality === '>=';
-      return { data, shadeAbove };
+      return data;
     }
 
     function plotGraph() {
@@ -68,13 +60,13 @@
       const line2 = parseEquation(equation2);
 
       if (!line1 || !line2) {
-        resultDiv.innerHTML = '<p style="color: red;">Invalid input. Please use the format "y < mx + b".</p>';
+        resultDiv.innerHTML = '<p style="color: red;">Invalid equations. Please use the format "y = mx + b".</p>';
         return;
       }
 
-      // Generate data for shaded regions
-      const region1 = generateShadedRegionData(line1.m, line1.b, line1.inequality);
-      const region2 = generateShadedRegionData(line2.m, line2.b, line2.inequality);
+      // Generate data for lines
+      const data1 = generateLineData(line1.m, line1.b);
+      const data2 = generateLineData(line2.m, line2.b);
 
       // Determine if lines are parallel
       const areParallel = line1.m === line2.m;
@@ -90,19 +82,15 @@
           datasets: [
             {
               label: `Line 1: ${equation1}`,
-              data: region1.data,
+              data: data1,
               borderColor: 'red',
               showLine: true,
-              fill: region1.shadeAbove ? '+1' : '-1', // Fill above or below
-              backgroundColor: 'rgba(255, 0, 0, 0.2)',
             },
             {
               label: `Line 2: ${equation2}`,
-              data: region2.data,
+              data: data2,
               borderColor: 'blue',
               showLine: true,
-              fill: region2.shadeAbove ? '+1' : '-1', // Fill above or below
-              backgroundColor: 'rgba(0, 0, 255, 0.2)',
             },
           ],
         },
